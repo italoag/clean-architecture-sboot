@@ -1,0 +1,42 @@
+management:
+  endpoints:
+    web:
+      base-path: /inspect
+      path-mapping:
+        health: healthcheck
+      exposure:
+        include:
+          - info
+          - health
+          - httptrace
+          - metrics
+          - threaddump
+          - metrics
+  endpoint:
+    health:
+      show-details: always
+spring:
+  rabbitmq:
+    host: 172.23.8.213
+    port: 5672
+    username: guest
+    password: guest
+    ssl:
+      enabled: false
+  cache:
+    type: redis
+    redis:
+      time-to-live: 900000
+  datasource:
+    url: jdbc:postgresql://172.23.8.213:5432/lab
+    username: postgres
+    password: pgsqlpwd
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          lab:
+            non_contextual_creation: true
+    database: postgresql
+    hibernate:
+      ddl-auto: update
