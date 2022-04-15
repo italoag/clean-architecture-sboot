@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "spring.jms.servicebus.topic-queue",
+      "type": "java.lang.String",
+      "description": "Description for spring.jms.servicebus.topic-queue."
+  }
+] }

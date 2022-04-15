@@ -1,0 +1,98 @@
+server:
+  port: ${port:8080}
+azure:
+  application-insights:
+    instrumentation-key: ${APPINSIGHTS_INSTRUMENTATIONKEY}
+management:
+  endpoints:
+    web:
+      base-path: /inspect
+      path-mapping:
+        health: healthcheck
+      exposure:
+        include:
+          - info
+          - health
+          - httptrace
+          - metrics
+          - threaddump
+          - metrics
+  endpoint:
+    health:
+      show-details: always
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 10000
+        readTimeout: 10000
+        writeTimeout: 10000
+        connectionRequestTimeout: 10000
+        retryer:
+          maxAttempts: 3
+          backoffPolicy:
+            type: constant
+            delay: 500
+            maxDelay: 10000
+          retryableStatusCodes:
+            - 429
+            - 503
+            - 504
+          retryableExceptionClasses:
+            - java.net.SocketTimeoutException
+            - java.net.SocketException
+            - java.net.ConnectException
+            - java.net.UnknownHostException
+            - java.net.NoRouteToHostException
+            - java.net.ConnectException
+            - java.net.SocketException
+spring:
+  cloud:
+    azure:
+      profile:
+        subscription-id: ${AZURE_SUBSCRIPTION_ID}
+      redis:
+        name: ${AZURE_REDIS_NAME}
+        resource:
+          resource-group: ${AZURE_REDIS_RESOURCE_GROUP}
+  cache:
+    type: redis
+    redis:
+      time-to-live: 900000
+  datasource:
+    url: ${DATASOURCE_URL:jdbc:postgresql://172.23.8.213:5432/lab}
+    username: ${DATASOURCE_USERNAME:postgres}
+    password: ${DATASOURCE_PASSWORD:pgsqlpwd}
+  jms:
+    servicebus:
+      connection-string: ${SERVICEBUS_CONNECTION_STRING}
+      topic-client-id: ${SERVICEBUS_TOPIC_CLIENT_ID}
+      topic-queue: ${SERVICEBUS_TOPIC_NAME:italo-topic}
+      idle-timeout: ${SERVICEBUS_IDLE_TIMEOUT:900000}
+      pricing-tier: ${SERVICEBUS_PRICING_TIER:Standard}
+      remote-url: ${SERVICEBUS_REMOTE_URL:https://${SERVICEBUS_REMOTE_HOST:sb.servicebus.windows.net}/}
+      username: ${SERVICEBUS_USERNAME}
+      password: ${SERVICEBUS_PASSWORD}
+
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+        non_contextual_creation: true
+    database: ${DATABASE_NAME:postgresql}
+    hibernate:
+      ddl-auto: update
+  rabbitmq:
+    host: ${RABBITMQ_HOST:172.23.8.213}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    ssl:
+      enabled: false
+  sleuth:
+    otel:
+      config:
+        trace-id-ratio-based: 1.0
+      exporter:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_ENDPOINT:http://localhost:9411/api/v2/spans}

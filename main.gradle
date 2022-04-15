@@ -1,0 +1,128 @@
+allprojects {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven {
+            url "https://repo.spring.io/release"
+        }
+        maven {
+            url "https://repo.spring.io/libs-release"
+        }
+        maven {
+            url "https://repo.spring.io/milestone"
+        }
+        maven {
+            url "https://repo.spring.io/milestone-release"
+        }
+        maven {
+            url "https://repo.spring.io/milestone-snapshot"
+        }
+        maven {
+            url "https://repo.spring.io/snapshot"
+        }
+        maven {
+            url "https://repo.spring.io/libs-snapshot"
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'jacoco'
+    apply plugin: 'io.spring.dependency-management'
+
+    sourceCompatibility = JavaVersion.VERSION_11
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-amqp'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        implementation 'org.springframework.boot:spring-boot-starter-hateoas'
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'com.azure.spring:spring-cloud-azure-starter'
+        implementation 'com.azure.spring:spring-cloud-azure-starter-servicebus-jms'
+        implementation 'com.azure.spring:spring-cloud-azure-starter-actuator'
+        implementation 'com.azure.spring:spring-cloud-azure-trace-sleuth'
+        implementation 'com.azure.spring:spring-cloud-azure-resourcemanager'
+        implementation platform("io.opentelemetry:opentelemetry-bom:1.13.0")
+        implementation platform('io.opentelemetry:opentelemetry-bom-alpha:1.13.0-alpha')
+        implementation('io.opentelemetry:opentelemetry-api')
+        implementation('io.opentelemetry:opentelemetry-exporter-otlp')
+        implementation('io.opentelemetry:opentelemetry-sdk-extension-resources')
+        implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+        implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+        implementation('org.springframework.cloud:spring-cloud-starter-sleuth') {
+            exclude group: 'org.springframework.cloud', module: 'spring-cloud-sleuth-brave'
+        }
+        implementation('org.springframework.cloud:spring-cloud-sleuth-api')
+        implementation("org.springframework.cloud:spring-cloud-sleuth-otel-autoconfigure:${springCloudSleuthOtelVersion}") {
+            exclude group: 'org.springframework.cloud', module: 'spring-cloud-sleuth-api'
+            exclude group: 'org.springframework.cloud', module: 'spring-cloud-sleuth-brave'
+            exclude group: 'org.springframework.boot', module: 'spring-boot-starter'
+        }
+        implementation('io.grpc:grpc-netty-shaded:1.45.1')
+        implementation('org.junit.jupiter:junit-jupiter:5.8.2')
+        implementation('org.mockito:mockito-core:4.4.0')
+        implementation('org.mockito:mockito-junit-jupiter:4.4.0')
+        implementation('org.hamcrest:hamcrest')
+
+        implementation 'io.micrometer:micrometer-core'
+        implementation('io.micrometer:micrometer-registry-jmx') {
+            exclude group: 'org.sl4j', module: 'sl4j-api'
+        }
+        compileOnly 'org.checkerframework:checker-qual:3.21.4'
+        testCompileOnly 'org.checkerframework:checker-qual:3.21.4'
+        checkerFramework 'org.checkerframework:checker:3.21.4'
+        runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+        compileOnly 'org.projectlombok:lombok'
+        runtimeOnly 'org.postgresql:postgresql'
+        developmentOnly 'org.springframework.boot:spring-boot-devtools'
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+        annotationProcessor 'org.projectlombok:lombok'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.springframework.amqp:spring-rabbit-test'
+
+    }
+
+    test.finalizedBy(project.tasks.jacocoTestReport)
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.enabled true
+            xml.destination file("${buildDir}/reports/jacoco.xml")
+            csv.enabled false
+            html.destination file("${buildDir}/reports/jacocoHtml")
+        }
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "com.azure.spring:spring-cloud-azure-dependencies:${springCloudAzureVersion}"
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
+    }
+}
+
+jacoco {
+    toolVersion = "${jacocoVersion}"
+    reportsDirectory = layout.buildDirectory.dir("$buildDir/reports") as Directory
+}
+
+task jacocoMergedReport(type: JacocoReport) {
+    dependsOn = subprojects.jacocoTestReport
+    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom files(subprojects.sourceSets.main.output)
+    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
+    reports {
+        xml.enabled true
+        csv.enabled false
+        html.enabled true
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs = [
+            '-Amapstruct.suppressGeneratorTimestamp=true'
+    ]
+}

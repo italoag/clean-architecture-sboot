@@ -1,0 +1,14 @@
+rootProject.name = 'app-service'
+
+include ':domain-entity'
+project(':domain-entity').projectDir = file('../../domain/entity')
+include ':usecase-interactor'
+project(':usecase-interactor').projectDir = file('../../domain/usecase')
+include ':rest-api'
+project(':rest-api').projectDir = file('../../infrastructure/rest/gateway')
+include ':rest-gateway'
+project(':rest-gateway').projectDir = file('../../infrastructure/rest/api')
+include ':jpa-persistence'
+project(':jpa-persistence').projectDir = file('../../infrastructure/persistence/jpa')
+include ':redis-cache'
+project(':redis-cache').projectDir = file('../../infrastructure/cache/redis')

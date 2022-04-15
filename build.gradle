@@ -1,12 +1,42 @@
+buildscript {
+    ext {
+        set('springCloudAzureVersion', "4.0.0")
+        set('springBootVersion', "2.6.6")
+        set('springCloudVersion', "2021.0.1")
+        set('sonarVersion', "3.0")
+        set('jacocoVersion', "0.8.5")
+        set('springCloudSleuthOtelVersion', "1.1.0-M5")
+    }
+}
+
 plugins {
-    id 'org.springframework.boot' version '2.6.6'
+    id 'org.springframework.boot' version "${springBootVersion}"
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
+    // Checker Framework pluggable type-checking
+    id 'org.checkerframework' version '0.6.10'
+    id 'org.sonarqube' version "${sonarVersion}"
+    id 'jacoco'
+}
+
+sonarqube {
+    properties {
+        property "sonar.sourceEnconding", "UTF-8"
+        property "sonar.modules", "applications/service," +
+                "domain/entity, domain/usecase," +
+                "infrastructure/persistence/*, infrastructure/rest/*"
+        property "sonar.sources", "src, deployment, build.gradle, applications/app-service/build.gradle"
+        property "sonar.test", "src/test"
+        property "sonar.java.binaries", ""
+        property "sonar.junit.reportsPath", ""
+        property "sonar.java.coveragePlugin", "jacoco"
+        property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
+    }
 }
 
 group = 'tech.eita'
-version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '11'
+version = '1.0.0'
+sourceCompatibility = JavaVersion.VERSION_11
 
 configurations {
     compileOnly {
@@ -14,43 +44,25 @@ configurations {
     }
 }
 
-repositories {
-    mavenCentral()
-}
 
 ext {
     set('springCloudAzureVersion', "4.0.0")
     set('springCloudVersion', "2021.0.1")
+    set('springCloudSleuthOtelVersion', "1.1.0-M5")
 }
 
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-amqp'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-hateoas'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'com.azure.spring:spring-cloud-azure-starter'
-    implementation 'com.azure.spring:spring-cloud-azure-starter-servicebus-jms'
-    implementation 'com.azure.spring:spring-cloud-azure-starter-actuator'
-    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
-    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-    implementation 'org.springframework.cloud:spring-cloud-starter-sleuth'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
-    runtimeOnly 'org.postgresql:postgresql'
-    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.amqp:spring-rabbit-test'
-}
 
-dependencyManagement {
-    imports {
-        mavenBom "com.azure.spring:spring-cloud-azure-dependencies:${springCloudAzureVersion}"
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-    }
+apply plugin: 'org.checkerframework'
+
+checkerFramework {
+    checkers = [
+            'org.checkerframework.checker.nullness.NullnessChecker',
+            'org.checkerframework.checker.units.UnitsChecker'
+    ]
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+apply from: './main.gradle'
